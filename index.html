@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shreya & Prakhar | The Royal Wedding Invitation</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Great+Vibes&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- AOS Animation Library -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<!-- Canvas Confetti Library -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          burgundy: {
+            900: '#230a0b',
+            800: '#3c1111',
+            700: '#561c20',
+            600: '#722323',
+          },
+          gold: {
+            light: '#f4d796',
+            DEFAULT: '#dfbc75',
+            dark: '#b28a42',
+            deep: '#7c531d',
+          },
+          cream: '#fffaf3',
+        },
+        fontFamily: {
+          serif: ['Cormorant Garamond', 'serif'],
+          script: ['Great Vibes', 'cursive'],
+          sans: ['Poppins', 'sans-serif'],
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  :root {
+    --primary-dark: #3c1111;
+    --accent-gold: #dfbc75;
+    --gold-light: #f4d796;
+    --bg-cream: #fffaf3;
+    --text-main: #562323;
+  }
+
+  body {
+    background-color: var(--bg-cream);
+    color: var(--text-main);
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
+  /* Floating Sparkles Effect */
+  .sparkle {
+    position: fixed;
+    pointer-events: none;
+    border-radius: 50%;
+    animation: floatUp linear infinite;
+    z-index: 99;
+  }
+
+  @keyframes floatUp {
+    0% { transform: translateY(105vh) scale(0) rotate(0deg); opacity: 0; }
+    20% { opacity: 0.9; }
+    80% { opacity: 0.8; }
+    100% { transform: translateY(-10vh) scale(1.5) rotate(360deg); opacity: 0; }
+  }
+
+  /* Petal Falling Animation */
+  .petal {
+    position: fixed;
+    pointer-events: none;
+    background: radial-gradient(circle, #fbcfe8 0%, #f43f5e 100%);
+    border-radius: 15px 0 15px 0;
+    opacity: 0.7;
+    animation: petalFall linear infinite;
+    z-index: 98;
+  }
+
+  @keyframes petalFall {
+    0% { transform: translateY(-5vh) rotate(0deg) translateX(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    100% { transform: translateY(105vh) rotate(720deg) translateX(80px); opacity: 0; }
+  }
+
+  /* Audio Wave Visualizer */
+  .audio-bar {
+    width: 3px;
+    height: 14px;
+    background-color: var(--gold-light);
+    border-radius: 2px;
+    display: inline-block;
+    animation: bounce 1s ease-in-out infinite alternate;
+  }
+  .audio-bar:nth-child(2) { animation-delay: 0.2s; }
+  .audio-bar:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0% { height: 4px; }
+    100% { height: 16px; }
+  }
+
+  /* Custom Glassmorphism */
+  .glass-card {
+    background: rgba(45, 12, 14, 0.65);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(223, 188, 117, 0.4);
+  }
+
+  .glass-card-light {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(235, 221, 198, 0.8);
+  }
+
+  /* Royal Border Glow */
+  .pulse-border {
+    animation: pulseGlow 4s ease-in-out infinite alternate;
+  }
+  @keyframes pulseGlow {
+    0% { border-color: rgba(223,188,117,0.3); box-shadow: 0 0 15px rgba(223,188,117,0.1); }
+    100% { border-color: rgba(223,188,117,0.9); box-shadow: 0 0 25px rgba(223,188,117,0.35); }
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #230a0b;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #dfbc75;
+    border-radius: 4px;
+  }
+
+  /* Puzzle grid styling */
+  .puzzle-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    width: 300px;
+    height: 300px;
+    background: var(--accent-gold);
+    padding: 6px;
+    border-radius: 14px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+  }
+
+  @media (min-width: 640px) {
+    .puzzle-grid {
+      width: 345px;
+      height: 345px;
+    }
+  }
+
+  .puzzle-tile {
+    background-size: 300px 300px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: transform 0.15s ease, filter 0.15s ease;
+    user-select: none;
+  }
+
+  @media (min-width: 640px) {
+    .puzzle-tile {
+      background-size: 345px 345px;
+    }
+  }
+
+  .puzzle-tile:hover:not(.empty-tile) {
+    filter: brightness(1.12);
+    transform: scale(0.98);
+  }
+
+  .empty-tile {
+    background: #230a0b !important;
+    cursor: default;
+    border: 1px dashed rgba(223, 188, 117, 0.4);
+  }
+</style>
+</head>
+
+<body class="font-sans">
+
+<!-- Background Audio -->
+<audio id="bgMusic" loop preload="auto">
+  <source src="song.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Floating Audio Toggle Button -->
+<button id="musicToggle" onclick="toggleMusic()" class="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-burgundy-800 to-burgundy-900 text-gold-light border border-gold/70 px-5 py-3 rounded-full cursor-pointer shadow-2xl flex items-center gap-3 transition-all duration-300 hover:scale-105 hover:border-gold-light">
+  <span id="audioVisualizer" class="hidden flex items-center gap-1">
+    <span class="audio-bar"></span>
+    <span class="audio-bar"></span>
+    <span class="audio-bar"></span>
+  </span>
+  <span id="musicIcon">🎵</span>
+  <span id="musicText" class="text-xs font-medium tracking-wide">Play Music</span>
+</button>
+
+<!-- Navigation Header -->
+<nav class="fixed top-0 left-0 w-full z-40 bg-burgundy-900/85 backdrop-blur-md border-b border-gold/30 px-6 py-3.5 transition-all duration-300 shadow-md">
+  <div class="max-w-6xl mx-auto flex justify-between items-center">
+    <a href="#" class="font-script text-2xl sm:text-3xl text-gold-light hover:text-gold transition">Prakhar &amp; Shreya</a>
+    <div class="flex gap-4 sm:gap-8 text-[11px] sm:text-xs tracking-widest text-gold-light/90 uppercase font-light">
+      <a href="#ceremonies" class="hover:text-gold transition hover:underline underline-offset-4">Events</a>
+      <a href="#puzzle" class="hover:text-gold transition hover:underline underline-offset-4">Moments</a>
+      <a href="#blessings" class="hover:text-gold transition hover:underline underline-offset-4">Blessings</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<header class="relative min-h-screen flex items-center justify-center text-center p-6 bg-cover bg-fixed bg-center text-cream overflow-hidden" 
+        style="background-image: linear-gradient(rgba(35, 10, 11, 0.72), rgba(56, 16, 18, 0.88)), url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=80');">
+  
+  <div class="glass-card pulse-border rounded-2xl p-8 sm:p-14 max-w-2xl w-full my-16 relative z-10" data-aos="zoom-in" data-aos-duration="1200">
+    <div class="text-gold-light tracking-[0.3em] text-xs uppercase font-medium">॥ श्री गणेशाय नमः ॥</div>
+    <div class="text-gold text-xl my-3">❀ ❧ ❀</div>
+    <p class="text-xs tracking-[0.25em] text-cream/90 uppercase font-light">Together with their families</p>
+    
+    <h1 class="font-serif text-5xl sm:text-7xl font-semibold text-gold-light my-4 leading-tight">
+      Prakhar
+      <span class="block font-script text-4xl sm:text-6xl text-white my-1 drop-shadow-md">&amp;</span>
+      Shreya
+    </h1>
+    
+    <p class="text-xs tracking-[0.25em] text-cream/90 uppercase font-light mt-2">Invite you to celebrate their wedding</p>
+    <div class="text-gold text-lg my-3">✦</div>
+    <p class="text-xs sm:text-sm tracking-[0.2em] font-light text-gold-light">28 &amp; 30 NOVEMBER 2026</p>
+
+    <div class="mt-8">
+      <a href="#ceremonies" class="inline-block border border-gold/70 text-gold-light text-xs tracking-widest uppercase px-8 py-3.5 rounded-full hover:bg-gold hover:text-burgundy-900 font-semibold transition duration-300">
+        Explore Celebrations 📜
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Intro Section -->
+<section class="py-20 px-6 text-center bg-cream" data-aos="fade-up">
+  <div class="max-w-3xl mx-auto">
+    <div class="text-gold-dark text-2xl mb-2">❀</div>
+    <h2 class="font-serif text-3xl sm:text-4xl text-burgundy-600 font-semibold mb-4">A Beautiful Beginning</h2>
+    <p class="text-sm sm:text-base text-gray-700 leading-relaxed max-w-xl mx-auto font-light">
+      Two hearts, two families, and one beautiful journey.<br>
+      With blessings and love, we invite you to be a part of our special celebrations as we embark on forever together.
+    </p>
+    <div class="text-gold-dark text-xl my-4">♥</div>
+    <p class="font-script text-4xl text-gold-dark">Prakhar &amp; Shreya</p>
+  </div>
+</section>
+
+<!-- Countdown Timer Section -->
+<section class="py-16 px-6 bg-gradient-to-br from-burgundy-900 to-burgundy-800 text-cream text-center relative overflow-hidden" data-aos="fade-up">
+  <div class="max-w-4xl mx-auto relative z-10">
+    <div class="text-gold text-xl">✦</div>
+    <h2 class="font-serif text-3xl sm:text-4xl text-gold-light font-semibold mt-2 mb-2">Countdown to Forever</h2>
+    <p class="text-xs text-gold-light/80 tracking-widest uppercase mb-10">The Celebrations Begin In</p>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
+      <div class="bg-white/5 border border-gold/30 backdrop-blur-sm p-5 rounded-xl shadow-xl transition hover:-translate-y-1 hover:border-gold">
+        <span id="days" class="block font-serif text-4xl sm:text-5xl font-bold text-gold-light">00</span>
+        <span class="text-[10px] tracking-widest text-gold-light/70 uppercase font-semibold mt-1 block">Days</span>
+      </div>
+      <div class="bg-white/5 border border-gold/30 backdrop-blur-sm p-5 rounded-xl shadow-xl transition hover:-translate-y-1 hover:border-gold">
+        <span id="hours" class="block font-serif text-4xl sm:text-5xl font-bold text-gold-light">00</span>
+        <span class="text-[10px] tracking-widest text-gold-light/70 uppercase font-semibold mt-1 block">Hours</span>
+      </div>
+      <div class="bg-white/5 border border-gold/30 backdrop-blur-sm p-5 rounded-xl shadow-xl transition hover:-translate-y-1 hover:border-gold">
+        <span id="minutes" class="block font-serif text-4xl sm:text-5xl font-bold text-gold-light">00</span>
+        <span class="text-[10px] tracking-widest text-gold-light/70 uppercase font-semibold mt-1 block">Minutes</span>
+      </div>
+      <div class="bg-white/5 border border-gold/30 backdrop-blur-sm p-5 rounded-xl shadow-xl transition hover:-translate-y-1 hover:border-gold">
+        <span id="seconds" class="block font-serif text-4xl sm:text-5xl font-bold text-gold-light">00</span>
+        <span class="text-[10px] tracking-widest text-gold-light/70 uppercase font-semibold mt-1 block">Seconds</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Events Section -->
+<section id="ceremonies" class="py-20 px-6 bg-cream text-center" data-aos="fade-up">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-gold-dark text-2xl">❀</div>
+    <h2 class="font-serif text-3xl sm:text-4xl text-burgundy-600 font-semibold mb-2">Wedding Celebrations</h2>
+    <p class="text-xs text-gray-500 tracking-wider uppercase mb-12">Join us for love, laughter and unforgettable memories</p>
+
+    <div class="space-y-6 text-left max-w-2xl mx-auto">
+      <!-- Sangeet -->
+      <div class="glass-card-light p-6 sm:p-8 rounded-2xl flex flex-col sm:flex-row items-center gap-6 shadow-md border hover:border-gold transition duration-300" data-aos="fade-left">
+        <div class="text-5xl bg-purple-50 p-4 rounded-xl border border-purple-200 shadow-inner">🎶</div>
+        <div class="flex-1 text-center sm:text-left">
+          <div class="text-xs font-semibold text-gold-dark uppercase tracking-widest">28 November 2026</div>
+          <h3 class="font-serif text-2xl text-burgundy-600 font-bold mt-1">Sangeet Ceremony</h3>
+          <p class="text-xs text-gray-600 mt-1">04:00 PM Onwards</p>
+          <p class="text-sm font-medium text-gray-700 mt-2">The Royale Occasion, Mandhana</p>
+        </div>
+        <a href="https://maps.app.goo.gl/gZK5R4rNnnMF8vsa8" target="_blank" rel="noopener" class="inline-flex items-center gap-2 border border-gold text-gold-deep bg-cream px-4 py-2 rounded-full text-xs font-medium hover:bg-gold-deep hover:text-white transition">
+          📍 Get Directions
+        </a>
+      </div>
+
+      <!-- Wedding -->
+      <div class="glass-card-light p-6 sm:p-8 rounded-2xl flex flex-col sm:flex-row items-center gap-6 shadow-md border hover:border-gold transition duration-300" data-aos="fade-right">
+        <div class="text-5xl bg-rose-50 p-4 rounded-xl border border-rose-200 shadow-inner">💍</div>
+        <div class="flex-1 text-center sm:text-left">
+          <div class="text-xs font-semibold text-gold-dark uppercase tracking-widest">30 November 2026</div>
+          <h3 class="font-serif text-2xl text-burgundy-600 font-bold mt-1">Wedding Ceremony</h3>
+          <p class="text-xs text-gray-600 mt-1">07:00 PM Onwards</p>
+          <p class="text-sm font-medium text-gray-700 mt-2">KD Resort, Mandhana</p>
+        </div>
+        <a href="https://maps.app.goo.gl/3JxLKAgxHb6Xh8xH8" target="_blank" rel="noopener" class="inline-flex items-center gap-2 border border-gold text-gold-deep bg-cream px-4 py-2 rounded-full text-xs font-medium hover:bg-gold-deep hover:text-white transition">
+          📍 Get Directions
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Moments Puzzle Game Section -->
+<section id="puzzle" class="py-20 px-6 bg-gradient-to-br from-burgundy-900 to-burgundy-800 text-cream text-center" data-aos="fade-up">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-gold text-xl">✨</div>
+    <h2 class="font-serif text-3xl sm:text-4xl text-gold-light font-semibold mt-2 mb-2">Our Moments (Jumble Puzzle)</h2>
+    <p class="text-xs text-gold-light/80 tracking-widest uppercase mb-8">Solve the sliding puzzle to reveal our special memories!</p>
+
+    <div class="max-w-md mx-auto">
+      <!-- Photo Selector Tabs -->
+      <div class="flex justify-center gap-3 mb-6">
+        <button id="tab0" onclick="switchPuzzle(0)" class="puzzle-tab border border-gold px-5 py-2 rounded-full text-xs font-semibold text-gold-light transition bg-gold text-burgundy-900">
+          Photo 1
+        </button>
+        <button id="tab1" onclick="switchPuzzle(1)" class="puzzle-tab border border-gold px-5 py-2 rounded-full text-xs font-semibold text-gold-light transition hover:bg-gold/20">
+          Photo 2
+        </button>
+      </div>
+
+      <!-- Puzzle Grid -->
+      <div class="puzzle-grid mx-auto" id="puzzleBoard"></div>
+
+      <!-- Stats & Controls -->
+      <div class="mt-6 flex justify-between items-center max-w-[345px] mx-auto text-xs text-gold-light/90">
+        <span id="moveCounter">Moves: 0</span>
+        <button onclick="shufflePuzzle()" class="bg-gradient-to-r from-gold to-gold-dark text-burgundy-900 font-semibold px-5 py-2 rounded-full text-xs shadow-md hover:scale-105 transition">
+          🔀 Shuffle Puzzle
+        </button>
+      </div>
+
+      <!-- Win Message -->
+      <div id="winMsg" class="font-serif text-xl text-gold-light font-bold mt-4 min-h-[30px]"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Blessings Wall Section -->
+<section id="blessings" class="py-20 px-6 bg-cream text-center" data-aos="fade-up">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-gold-dark text-2xl">♥</div>
+    <h2 class="font-serif text-3xl sm:text-4xl text-burgundy-600 font-semibold mb-2">Give Your Blessing</h2>
+    <p class="text-xs text-gray-500 tracking-wider uppercase mb-10">Leave your lovely message and wishes for the couple!</p>
+
+    <div class="max-w-xl mx-auto text-left">
+      <!-- Blessing Form -->
+      <form id="blessingForm" onsubmit="postBlessing(event)" class="glass-card-light p-6 sm:p-8 rounded-2xl border border-gold/40 shadow-md mb-10">
+        <div class="mb-4">
+          <label class="block text-xs font-semibold text-burgundy-700 uppercase mb-2">Your Full Name</label>
+          <input type="text" id="guestName" placeholder="your name" required maxlength="40"
+                 class="w-full px-4 py-3 rounded-lg border border-gold/40 bg-cream text-burgundy-900 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition">
+        </div>
+        <div class="mb-2">
+          <label class="block text-xs font-semibold text-burgundy-700 uppercase mb-2">Your Blessing Message</label>
+          <textarea id="guestMessage" placeholder="Write your heartfelt blessing (max 50 words)..." required maxlength="300" oninput="updateCount()"
+                    class="w-full px-4 py-3 rounded-lg border border-gold/40 bg-cream text-burgundy-900 text-sm h-28 resize-none focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition"></textarea>
+        </div>
+        <div id="charCount" class="text-right text-[11px] text-gray-500 mb-4 font-medium">0/50 words</div>
+        <button type="submit" class="w-full bg-gradient-to-r from-burgundy-700 to-burgundy-900 text-gold-light py-3 rounded-full font-semibold text-sm shadow-md hover:from-burgundy-800 hover:to-burgundy-950 transition">
+          Post Blessing ✨
+        </button>
+      </form>
+
+      <!-- Blessings Cards Grid -->
+      <div id="blessingsGrid" class="space-y-4 max-h-[460px] overflow-y-auto pr-2">
+        <!-- Pre-populated cards will load here -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Outro Section -->
+<section class="py-16 px-6 bg-amber-50 text-center" data-aos="fade-up">
+  <div class="max-w-2xl mx-auto">
+    <div class="text-gold-dark text-2xl">♥</div>
+    <h2 class="font-serif text-3xl sm:text-4xl text-burgundy-600 font-semibold mb-3">Your Presence Matters</h2>
+    <p class="text-sm text-gray-600 leading-relaxed max-w-lg mx-auto font-light mb-4">
+      Your blessings will make our celebrations even more special. We eagerly await your presence to celebrate love, laughter, and togetherness!
+    </p>
+    <div class="text-gold-dark text-xl mb-2">❀</div>
+    <p class="font-script text-4xl text-burgundy-600">Prakhar &amp; Shreya</p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-burgundy-900 text-gold-light py-10 px-6 text-center border-t border-gold/30">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-gold text-lg mb-2">❧</div>
+    <h2 class="font-serif text-2xl text-gold-light font-semibold">Made with Love</h2>
+    <p class="text-[10px] tracking-[0.3em] text-gold-light/70 uppercase mt-2">
+      TWO HEARTS · ONE FOREVER
+    </p>
+  </div>
+</footer>
+
+<!-- Notification Toast -->
+<div id="toast" class="fixed top-20 right-6 z-50 transform translate-x-72 transition-transform duration-300 bg-burgundy-900 text-gold-light border border-gold px-5 py-3 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-2">
+  <span id="toastMsg">Blessing posted!</span>
+</div>
+
+<!-- AOS JS -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+<script>
+// Initialize AOS Animations
+AOS.init({ duration: 1000, once: true });
+
+// Floating Sparkles Generator
+function createSparkle() {
+  const sparkle = document.createElement('div');
+  sparkle.className = 'sparkle';
+  const size = Math.random() * 5 + 3;
+  sparkle.style.width = size + 'px';
+  sparkle.style.height = size + 'px';
+  sparkle.style.background = `radial-gradient(circle, #fff 0%, #dfbc75 80%)`;
+  sparkle.style.boxShadow = `0 0 8px #dfbc75`;
+  sparkle.style.left = Math.random() * window.innerWidth + 'px';
+  sparkle.style.animationDuration = (Math.random() * 2.5 + 2.5) + 's';
+  document.body.appendChild(sparkle);
+  setTimeout(() => sparkle.remove(), 5000);
+}
+setInterval(createSparkle, 300);
+
+// Falling Rose Petals Generator
+function createPetal() {
+  const petal = document.createElement('div');
+  petal.className = 'petal';
+  const size = Math.random() * 8 + 8;
+  petal.style.width = size + 'px';
+  petal.style.height = (size * 1.3) + 'px';
+  petal.style.left = Math.random() * window.innerWidth + 'px';
+  petal.style.animationDuration = (Math.random() * 4 + 4) + 's';
+  document.body.appendChild(petal);
+  setTimeout(() => petal.remove(), 8000);
+}
+setInterval(createPetal, 700);
+
+// Audio Toggle Logic
+let isPlaying = false;
+function toggleMusic() {
+  const music = document.getElementById('bgMusic');
+  const text = document.getElementById('musicText');
+  const icon = document.getElementById('musicIcon');
+  const visualizer = document.getElementById('audioVisualizer');
+
+  if (isPlaying) {
+    music.pause();
+    text.textContent = "Play Music";
+    icon.classList.remove('hidden');
+    visualizer.classList.add('hidden');
+    isPlaying = false;
+  } else {
+    music.play().then(() => {
+      text.textContent = "Pause Music";
+      icon.classList.add('hidden');
+      visualizer.classList.remove('hidden');
+      isPlaying = true;
+    }).catch(() => {
+      showToast("Audio autoplay blocked by browser. Click again!");
+    });
+  }
+}
+
+// Live Countdown Timer
+const weddingTime = new Date("2026-11-30T19:00:00+05:30").getTime();
+function countdown() {
+  const diff = weddingTime - Date.now();
+  const vals = {
+    days: Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24))),
+    hours: Math.max(0, Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))),
+    minutes: Math.max(0, Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))),
+    seconds: Math.max(0, Math.floor((diff % (1000 * 60)) / 1000))
+  };
+  Object.keys(vals).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(vals[id]).padStart(2, "0");
+  });
+}
+countdown();
+setInterval(countdown, 1000);
+
+// Sliding Puzzle Logic
+const images = [
+  "pic1.jpg",
+  "pic2.jpg"
+];
+let currentImgIdx = 0;
+let boardState = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+const winningState = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+let moves = 0;
+
+function switchPuzzle(idx) {
+  currentImgIdx = idx;
+  document.getElementById('tab0').className = idx === 0 
+    ? "puzzle-tab border border-gold px-5 py-2 rounded-full text-xs font-semibold text-gold-light bg-gold text-burgundy-900 transition"
+    : "puzzle-tab border border-gold px-5 py-2 rounded-full text-xs font-semibold text-gold-light hover:bg-gold/20 transition";
+  
+  document.getElementById('tab1').className = idx === 1 
+    ? "puzzle-tab border border-gold px-5 py-2 rounded-full text-xs font-semibold text-gold-light bg-gold text-burgundy-900 transition"
+    : "puzzle-tab border border-gold px-5 py-2 rounded-full text-xs font-semibold text-gold-light hover:bg-gold/20 transition";
+
+  shufflePuzzle();
+}
+
+function shufflePuzzle() {
+  moves = 0;
+  document.getElementById('moveCounter').textContent = `Moves: ${moves}`;
+  document.getElementById('winMsg').textContent = "";
+  
+  do {
+    for (let i = boardState.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [boardState[i], boardState[j]] = [boardState[j], boardState[i]];
+    }
+  } while (!isSolvable(boardState) || isSolved());
+
+  renderPuzzle();
+}
+
+function isSolvable(arr) {
+  let inversions = 0;
+  for (let i = 0; i < arr.length - 1; i++) {
+    for (let j = i + 1; j < arr.length; j++) {
+      if (arr[i] !== 8 && arr[j] !== 8 && arr[i] > arr[j]) {
+        inversions++;
+      }
+    }
+  }
+  return inversions % 2 === 0;
+}
+
+function isSolved() {
+  return boardState.every((val, i) => val === winningState[i]);
+}
+
+function renderPuzzle() {
+  const board = document.getElementById('puzzleBoard');
+  board.innerHTML = "";
+  
+  const tileSize = window.innerWidth >= 640 ? 115 : 100;
+
+  boardState.forEach((tileVal, idx) => {
+    const tile = document.createElement('div');
+    tile.className = 'puzzle-tile';
+    if (tileVal === 8) {
+      tile.classList.add('empty-tile');
+    } else {
+      const row = Math.floor(tileVal / 3);
+      const col = tileVal % 3;
+      tile.style.backgroundImage = `url(${images[currentImgIdx]})`;
+      tile.style.backgroundPosition = `-${col * tileSize}px -${row * tileSize}px`;
+      tile.onclick = () => moveTile(idx);
+    }
+    board.appendChild(tile);
+  });
+}
+
+function moveTile(idx) {
+  const emptyIdx = boardState.indexOf(8);
+  const validMoves = [emptyIdx - 1, emptyIdx + 1, emptyIdx - 3, emptyIdx + 3];
+
+  if (emptyIdx % 3 === 0 && idx === emptyIdx - 1) return;
+  if (emptyIdx % 3 === 2 && idx === emptyIdx + 1) return;
+
+  if (validMoves.includes(idx)) {
+    [boardState[emptyIdx], boardState[idx]] = [boardState[idx], boardState[emptyIdx]];
+    moves++;
+    document.getElementById('moveCounter').textContent = `Moves: ${moves}`;
+    renderPuzzle();
+    checkWin();
+  }
+}
+
+function checkWin() {
+  if (isSolved()) {
+    document.getElementById('winMsg').textContent = "🎉 Solved! Beautiful Memories Restored!";
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+  }
+}
+
+// Word Count for Blessings Textarea
+function updateCount() {
+  const text = document.getElementById('guestMessage').value.trim();
+  const words = text ? text.split(/\s+/).length : 0;
+  const countEl = document.getElementById('charCount');
+  countEl.textContent = `${words}/50 words`;
+  countEl.style.color = words > 50 ? "#e74c3c" : "#6b7280";
+}
+
+// Firebase Config & Initialization
+const firebaseConfig = {
+  apiKey: "AIzaSyBxvsT7A8UhztQ9yCT4g-QAsMh6dSy-Jz0",
+  authDomain: "shreya-prakhar-wedding.firebaseapp.com",
+  databaseURL: "https://shreya-prakhar-wedding-default-rtdb.firebaseio.com",
+  projectId: "shreya-prakhar-wedding",
+  storageBucket: "shreya-prakhar-wedding.firebasestorage.app",
+  messagingSenderId: "852876201723",
+  appId: "1:852876201723:web:012aa3f3280ac1fff4aa5e",
+  measurementId: "G-78MQRJ1ZNS"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Real-time Firebase Listener
+function listenToBlessings() {
+  db.collection("blessings")
+    .orderBy("createdAt", "desc")
+    .onSnapshot((snapshot) => {
+      const grid = document.getElementById('blessingsGrid');
+      grid.innerHTML = "";
+
+      if (snapshot.empty) {
+        grid.innerHTML = `<p class="text-xs text-gray-500 italic">Be the First One to Wish!</p>`;
+        return;
+      }
+
+      snapshot.forEach((doc) => {
+        const b = doc.data();
+        const dateStr = b.createdAt ? new Date(b.createdAt.toDate()).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric'
+        }) : 'Recently';
+
+        const card = document.createElement('div');
+        card.className = 'glass-card-light p-5 rounded-xl border-l-4 border-gold text-left shadow-sm transition hover:shadow-md';
+        card.innerHTML = `
+          <h4 class="font-serif text-lg font-bold text-burgundy-700">${escapeHtml(b.name)}</h4>
+          <p class="text-xs text-gray-700 mt-1 leading-relaxed">${escapeHtml(b.message)}</p>
+          <span class="text-[10px] text-gold-dark font-medium block mt-2">${dateStr}</span>
+        `;
+        grid.appendChild(card);
+      });
+    });
+}
+
+// Post Blessing Function
+async function postBlessing(e) {
+  e.preventDefault();
+  const name = document.getElementById('guestName').value.trim();
+  const message = document.getElementById('guestMessage').value.trim();
+  const words = message ? message.split(/\s+/).length : 0;
+
+  if (words > 50) {
+    showToast("Please message ko 50 words se chhota karein.");
+    return;
+  }
+
+  try {
+    await db.collection("blessings").add({
+      name: name,
+      message: message,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById('blessingForm').reset();
+    document.getElementById('charCount').textContent = "0/50 words";
+    showToast("Thanks for your lovely blessing! ❤️");
+  } catch (error) {
+    console.error("Error: ", error);
+    showToast("Failed.");
+  }
+}
+
+window.onload = function() {
+  shufflePuzzle();
+  listenToBlessings();
+};
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.innerText = text;
+  return div.innerHTML;
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  toast.classList.remove('translate-x-72');
+  setTimeout(() => {
+    toast.classList.add('translate-x-72');
+  }, 3500);
+}
+</script>
+
+</body>
+</html>
